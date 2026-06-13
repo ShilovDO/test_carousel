@@ -1,0 +1,47 @@
+services:
+  backend:
+    build: 
+      context: ./carousel_backend
+      dockerfile: Dockerfile
+    container_name: carousel-backend
+    restart: always  # Всегда перезапускать при падении
+    environment:
+      NODE_ENV: production
+      PORT: 5087
+    ports:
+      - "5087:5087"
+    volumes:
+      - backend_images:/app/public/images
+    networks:
+      - carousel-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./carousel_frotend
+      dockerfile: Dockerfile
+    container_name: carousel-frontend
+    restart: always
+    ports:
+      - "5077:5077"
+    depends_on:
+      - backend
+    networks:
+      - carousel-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  backend_images:
+    driver: local
+
+networks:
+  carousel-network:
+    driver: bridge

@@ -1,0 +1,23 @@
+# carousel_backend/Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Устанавливаем необходимые системные зависимости
+RUN apk add --no-cache python3 make g++ 
+
+# Копируем package.json и package-lock.json
+COPY package*.json ./
+
+# Устанавливаем зависимости
+RUN npm ci
+
+# Копируем исходный код
+COPY . .
+
+# Создаем директорию для изображений
+RUN mkdir -p public/images
+
+EXPOSE 5087
+
+CMD ["node", "server.js"]

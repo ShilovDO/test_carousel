@@ -4,7 +4,7 @@ const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
 const app = express();
-const PORT = 3001;
+const PORT = 5087;
 const db = require('./db');
 const IMAGES_DIR = path.join(__dirname, 'public', 'images');
 

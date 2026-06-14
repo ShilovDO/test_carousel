@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
 // Разбираем DATABASE_URL
-const connectionString = process.env.DATABASE_URL || "postgresql://postgres:PasswordDBWEB2025&@176.108.249.27:5432/database_comics";
+const connectionString = "postgresql://postgres:PasswordDBWEB2025&@176.108.249.27:5432/database_comics";
 
 console.log('=== ИНИЦИАЛИЗАЦИЯ ПОДКЛЮЧЕНИЯ К БД ===');
 console.log('Строка подключения:', connectionString.replace(/:[^:@]*@/, ':****@')); // Скрываем пароль

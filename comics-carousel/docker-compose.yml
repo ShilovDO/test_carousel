@@ -5,7 +5,7 @@ services:
       - "5087:5087"  # Изменяем внешний порт на 8001
     environment:
       - DATABASE_URL=postgresql://postgres:PasswordDBWEB2025&@176.108.249.27:5432/psycho
-      - UPLOAD_DIR=/app/uploads  # Добавьте эту переменную
+ #      - UPLOAD_DIR=/app/uploads  # Добавьте эту переменную
       - DOCKER_CONTAINER=true  # Добавьте эту переменную
     volumes:
       - ./carouselbackend/public/images:/app/public/images

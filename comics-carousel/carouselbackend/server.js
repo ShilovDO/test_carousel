@@ -289,7 +289,7 @@ app.post('/api/save_timers', async (req, res) => {
     }
 });
 
-app.post('/api/result_save', async (req, res) => {
+app.post('/result_save', async (req, res) => {
     try {
         console.log('=== ПОЛУЧЕН ЗАПРОС НА СОХРАНЕНИЕ РЕЗУЛЬТАТА ===');
         console.log('Тело запроса:', JSON.stringify(req.body));

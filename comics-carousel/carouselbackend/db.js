@@ -8,11 +8,10 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false // для безопасности в продакшене
 });
 
-
 // Функция для записи данных в таблицу configs
 const saveConfig = async (id, text) => {
     const query = `
-      INSERT INTO configs (id, test) 
+      INSERT INTO schema_comics.configs (id, test) 
       VALUES ($1, $2) 
       RETURNING *;
     `;
@@ -28,7 +27,7 @@ const saveConfig = async (id, text) => {
   
   // Функция для проверки существования id
   const checkIdExists = async (id) => {
-    const query = 'SELECT id FROM configs WHERE id = $1';
+    const query = 'SELECT id FROM schema_comics.configs WHERE id = $1';
     const result = await pool.query(query, [id]);
     return result.rows.length > 0;
   };

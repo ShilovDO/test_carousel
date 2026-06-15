@@ -67,16 +67,6 @@ app.get('/api/images', (req, res) => {
     });
 });
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, IMAGES_DIR),
-    filename: (req, file, cb) => {
-        // Каждый файл получает УНИКАЛЬНОЕ имя сразу
-        const uniqueName = 'upload_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
-});
-
-// Тогда в обработчике:
 app.post('/api/upload', upload.array('images'), async (req, res) => {
     try {
         const uploadedFiles = req.files;
@@ -84,14 +74,10 @@ app.post('/api/upload', upload.array('images'), async (req, res) => {
             return res.status(400).json({ error: 'Нет файлов для загрузки' });
         }
 
-        // Просто переименовываем в .webp (если нужно)
-        uploadedFiles.forEach((file, index) => {
-            const webpName = file.filename.replace(path.extname(file.filename), '.webp');
-            const newPath = path.join(IMAGES_DIR, webpName);
-
-            // Файл ТОЧНО существует, потому что multer только что его создал
+        uploadedFiles.forEach((file) => {
+            const uniqueName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.webp`;
+            const newPath = path.join(IMAGES_DIR, uniqueName);
             fs.renameSync(file.path, newPath);
-            console.log(`Файл сохранен: ${webpName}`);
         });
 
         res.json({ success: true, message: 'Файлы загружены' });

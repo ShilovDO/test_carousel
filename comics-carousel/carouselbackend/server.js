@@ -16,7 +16,13 @@ const lastSlideResult = new Map();
 // Настройки Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, IMAGES_DIR),
-    filename: (req, file, cb) => cb(null, 'temp_' + Date.now() + path.extname(file.originalname))
+
+
+    // Должно быть:
+    filename: (req, file, cb) => {
+        const uniqueName = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) + path.extname(file.originalname);
+        cb(null, uniqueName);
+    }
 });
 const upload = multer({ storage });
 
@@ -65,15 +71,6 @@ app.get('/api/images', (req, res) => {
         const images = files.filter(f => /\.(webp|jpg|jpeg|png|gif)$/i.test(f));
         res.json(images);
     });
-});
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, IMAGES_DIR),
-    filename: (req, file, cb) => {
-        // Каждый файл получает УНИКАЛЬНОЕ имя сразу
-        const uniqueName = 'upload_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
 });
 
 // Тогда в обработчике:

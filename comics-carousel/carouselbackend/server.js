@@ -81,14 +81,11 @@ app.post('/api/upload', upload.array('images'), async (req, res) => {
             return res.status(400).json({ error: 'Нет файлов для загрузки' });
         }
 
-        // Просто переименовываем в .webp (если нужно)
         uploadedFiles.forEach((file, index) => {
-            const webpName = file.filename.replace(path.extname(file.filename), '.webp');
-            const newPath = path.join(IMAGES_DIR, webpName);
-
-            // Файл ТОЧНО существует, потому что multer только что его создал
+            // НЕ меняем расширение
+            const newPath = path.join(IMAGES_DIR, file.filename);
             fs.renameSync(file.path, newPath);
-            console.log(`Файл сохранен: ${webpName}`);
+            console.log(`Файл сохранен: ${file.filename}`);
         });
 
         res.json({ success: true, message: 'Файлы загружены' });

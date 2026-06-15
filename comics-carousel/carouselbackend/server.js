@@ -8,17 +8,15 @@ const PORT = 5087;
 const db = require('./db');
 const IMAGES_DIR = path.join(__dirname, 'public', 'images');
 
-// Временное хранилище таймеров
+// Р’СЂРµРјРµРЅРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ С‚Р°Р№РјРµСЂРѕРІ
 const tempTimersStorage = new Map();
 let currentResult = 0;
 const lastSlideResult = new Map();
 
-// Настройки Multer
+// РќР°СЃС‚СЂРѕР№РєРё Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, IMAGES_DIR),
-
-
-    // Должно быть:
+    // Правильное решение:
     filename: (req, file, cb) => {
         const uniqueName = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) + path.extname(file.originalname);
         cb(null, uniqueName);
@@ -37,7 +35,7 @@ app.use('/images', express.static(IMAGES_DIR, {
 }));
 
 // ============================================
-// МАРШРУТЫ СТРАНИЦ
+// РњРђР РЁР РЈРўР« РЎРўР РђРќРР¦
 // ============================================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
@@ -60,38 +58,36 @@ app.get('/admin', (req, res) => {
 });
 
 // ============================================
-// API: РАБОТА С ИЗОБРАЖЕНИЯМИ
+// API: Р РђР‘РћРўРђ РЎ РР—РћР‘Р РђР–Р•РќРРЇРњР
 // ============================================
 
 app.get('/api/images', (req, res) => {
     fs.readdir(IMAGES_DIR, (err, files) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка чтения папки' });
+            return res.status(500).json({ error: 'РћС€РёР±РєР° С‡С‚РµРЅРёСЏ РїР°РїРєРё' });
         }
         const images = files.filter(f => /\.(webp|jpg|jpeg|png|gif)$/i.test(f));
         res.json(images);
     });
 });
 
-// Тогда в обработчике:
 app.post('/api/upload', upload.array('images'), async (req, res) => {
     try {
         const uploadedFiles = req.files;
         if (!uploadedFiles || uploadedFiles.length === 0) {
-            return res.status(400).json({ error: 'Нет файлов для загрузки' });
+            return res.status(400).json({ error: 'РќРµС‚ С„Р°Р№Р»РѕРІ РґР»СЏ Р·Р°РіСЂСѓР·РєРё' });
         }
 
-        uploadedFiles.forEach((file, index) => {
-            // НЕ меняем расширение
-            const newPath = path.join(IMAGES_DIR, file.filename);
+        uploadedFiles.forEach((file) => {
+            const uniqueName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.webp`;
+            const newPath = path.join(IMAGES_DIR, uniqueName);
             fs.renameSync(file.path, newPath);
-            console.log(`Файл сохранен: ${file.filename}`);
         });
 
-        res.json({ success: true, message: 'Файлы загружены' });
+        res.json({ success: true, message: 'Р¤Р°Р№Р»С‹ Р·Р°РіСЂСѓР¶РµРЅС‹' });
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        res.status(500).json({ error: 'Ошибка загрузки файлов' });
+        console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё:', error);
+        res.status(500).json({ error: 'РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»РѕРІ' });
     }
 });
 
@@ -100,12 +96,12 @@ app.delete('/api/delete/:name', (req, res) => {
     try {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
-            res.json({ success: true, message: 'Файл удален' });
+            res.json({ success: true, message: 'Р¤Р°Р№Р» СѓРґР°Р»РµРЅ' });
         } else {
-            res.status(404).json({ error: 'Файл не найден' });
+            res.status(404).json({ error: 'Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ' });
         }
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка удаления' });
+        res.status(500).json({ error: 'РћС€РёР±РєР° СѓРґР°Р»РµРЅРёСЏ' });
     }
 });
 
@@ -130,20 +126,20 @@ app.post('/api/reorder', (req, res) => {
             }
         });
 
-        res.json({ success: true, message: 'Порядок изменен' });
+        res.json({ success: true, message: 'РџРѕСЂСЏРґРѕРє РёР·РјРµРЅРµРЅ' });
     } catch (error) {
-        console.error('Ошибка изменения порядка:', error);
-        res.status(500).json({ error: 'Ошибка изменения порядка' });
+        console.error('РћС€РёР±РєР° РёР·РјРµРЅРµРЅРёСЏ РїРѕСЂСЏРґРєР°:', error);
+        res.status(500).json({ error: 'РћС€РёР±РєР° РёР·РјРµРЅРµРЅРёСЏ РїРѕСЂСЏРґРєР°' });
     }
 });
 
 // ============================================
-// API: КОНФИГУРАЦИЯ
+// API: РљРћРќР¤РР“РЈР РђР¦РРЇ
 // ============================================
 
 app.post('/api/config/save', upload.array('images'), async (req, res) => {
     try {
-        console.log('Получены данные:', {
+        console.log('РџРѕР»СѓС‡РµРЅС‹ РґР°РЅРЅС‹Рµ:', {
             body: req.body,
             files: req.files ? req.files.length : 0
         });
@@ -152,21 +148,21 @@ app.post('/api/config/save', upload.array('images'), async (req, res) => {
         const uploadedFiles = req.files || [];
 
         if (!platform_id) {
-            return res.status(400).json({ success: false, error: 'Необходим platform_id' });
+            return res.status(400).json({ success: false, error: 'РќРµРѕР±С…РѕРґРёРј platform_id' });
         }
 
         if (!config_text) {
-            return res.status(400).json({ success: false, error: 'Необходим config_text' });
+            return res.status(400).json({ success: false, error: 'РќРµРѕР±С…РѕРґРёРј config_text' });
         }
 
         let comicsData = [];
         if (comics_data) {
             try {
-                comicsData = typeof comics_data === 'string' 
-                    ? JSON.parse(comics_data) 
+                comicsData = typeof comics_data === 'string'
+                    ? JSON.parse(comics_data)
                     : comics_data;
             } catch (e) {
-                return res.status(400).json({ success: false, error: 'Неверный формат comics_data' });
+                return res.status(400).json({ success: false, error: 'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ comics_data' });
             }
         }
 
@@ -207,10 +203,10 @@ app.post('/api/config/save', upload.array('images'), async (req, res) => {
             }
         }
 
-        res.json({ success: true, message: 'Конфигурация сохранена' });
+        res.json({ success: true, message: 'РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ СЃРѕС…СЂР°РЅРµРЅР°' });
 
     } catch (error) {
-        console.error('Ошибка сохранения:', error);
+        console.error('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -238,81 +234,81 @@ app.get('/api/config/:id', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения конфигурации:', error);
+        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ============================================
-// API: ТАЙМЕРЫ И РЕЗУЛЬТАТЫ
+// API: РўРђР™РњР•Р Р« Р Р Р•Р—РЈР›Р¬РўРђРўР«
 // ============================================
 
 app.post('/api/set_result', (req, res) => {
     const { result } = req.body;
     if (result === undefined) {
-        return res.status(400).send('Нет параметра result');
+        return res.status(400).send('РќРµС‚ РїР°СЂР°РјРµС‚СЂР° result');
     }
     currentResult = result;
-    
+
     const platformId = req.query.platform_id || req.body.platform_id;
     if (platformId) {
         lastSlideResult.set(platformId.toString(), result);
-        console.log(`Последний слайд для ${platformId}: ${result}`);
+        console.log(`РџРѕСЃР»РµРґРЅРёР№ СЃР»Р°Р№Рґ РґР»СЏ ${platformId}: ${result}`);
     }
-    
+
     res.sendStatus(200);
 });
 
 app.post('/api/save_timers', async (req, res) => {
     try {
         const { platform_id, timers } = req.body;
-        
-        console.log('=== СОХРАНЕНИЕ ТАЙМЕРОВ ВО ВРЕМЕННОЕ ХРАНИЛИЩЕ ===');
+
+        console.log('=== РЎРћРҐР РђРќР•РќРР• РўРђР™РњР•Р РћР’ Р’Рћ Р’Р Р•РњР•РќРќРћР• РҐР РђРќРР›РР©Р• ===');
         console.log('platform_id:', platform_id);
         console.log('timers:', JSON.stringify(timers, null, 2));
-        
+
         if (!platform_id || !timers) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Отсутствуют platform_id или timers' 
+            return res.status(400).json({
+                success: false,
+                error: 'РћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚ platform_id РёР»Рё timers'
             });
         }
-        
+
         tempTimersStorage.set(platform_id.toString(), {
             timers: timers,
             timestamp: Date.now()
         });
-        
-        console.log('✅ Таймеры сохранены во временном хранилище');
-        console.log('Всего в хранилище:', tempTimersStorage.size, 'записей');
-        
-        res.json({ 
-            success: true, 
-            message: 'Таймеры сохранены во временное хранилище' 
+
+        console.log('вњ… РўР°Р№РјРµСЂС‹ СЃРѕС…СЂР°РЅРµРЅС‹ РІРѕ РІСЂРµРјРµРЅРЅРѕРј С…СЂР°РЅРёР»РёС‰Рµ');
+        console.log('Р’СЃРµРіРѕ РІ С…СЂР°РЅРёР»РёС‰Рµ:', tempTimersStorage.size, 'Р·Р°РїРёСЃРµР№');
+
+        res.json({
+            success: true,
+            message: 'РўР°Р№РјРµСЂС‹ СЃРѕС…СЂР°РЅРµРЅС‹ РІРѕ РІСЂРµРјРµРЅРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ'
         });
-        
+
     } catch (error) {
-        console.error('Ошибка сохранения таймеров:', error);
+        console.error('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ С‚Р°Р№РјРµСЂРѕРІ:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.post('/result_save', async (req, res) => {
     try {
-        console.log('=== ПОЛУЧЕН ЗАПРОС НА СОХРАНЕНИЕ РЕЗУЛЬТАТА ===');
-        console.log('Тело запроса:', JSON.stringify(req.body));
-        
+        console.log('=== РџРћР›РЈР§Р•Рќ Р—РђРџР РћРЎ РќРђ РЎРћРҐР РђРќР•РќРР• Р Р•Р—РЈР›Р¬РўРђРўРђ ===');
+        console.log('РўРµР»Рѕ Р·Р°РїСЂРѕСЃР°:', JSON.stringify(req.body));
+
         const { id, user, station, route, config, date } = req.body;
 
         if (!id) {
-            return res.status(400).json({ success: false, error: 'Отсутствует id' });
+            return res.status(400).json({ success: false, error: 'РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ id' });
         }
 
         const resultId = parseInt(id);
         const configId = config ? parseInt(config) : 0;
 
         if (isNaN(resultId)) {
-            return res.status(400).json({ success: false, error: 'id должен быть числом' });
+            return res.status(400).json({ success: false, error: 'id РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ С‡РёСЃР»РѕРј' });
         }
 
         await db.query(`
@@ -329,10 +325,10 @@ app.post('/result_save', async (req, res) => {
             date || new Date().toISOString(),
             '0'
         ]);
-        
-        console.log('✓ Запись результата сохранена, id:', resultId);
 
-        // Сохраняем номер последнего просмотренного слайда
+        console.log('вњ“ Р—Р°РїРёСЃСЊ СЂРµР·СѓР»СЊС‚Р°С‚Р° СЃРѕС…СЂР°РЅРµРЅР°, id:', resultId);
+
+        // РЎРѕС…СЂР°РЅСЏРµРј РЅРѕРјРµСЂ РїРѕСЃР»РµРґРЅРµРіРѕ РїСЂРѕСЃРјРѕС‚СЂРµРЅРЅРѕРіРѕ СЃР»Р°Р№РґР°
         const configKey = configId.toString();
         const lastSlide = lastSlideResult.get(configKey);
         if (lastSlide) {
@@ -340,59 +336,59 @@ app.post('/result_save', async (req, res) => {
                 'UPDATE schema_comics.results SET result = $1 WHERE id = $2',
                 [lastSlide.toString(), resultId]
             );
-            console.log(`✓ Последний слайд ${lastSlide} сохранен для result_id: ${resultId}`);
+            console.log(`вњ“ РџРѕСЃР»РµРґРЅРёР№ СЃР»Р°Р№Рґ ${lastSlide} СЃРѕС…СЂР°РЅРµРЅ РґР»СЏ result_id: ${resultId}`);
             lastSlideResult.delete(configKey);
         }
 
-        // Проверяем временное хранилище таймеров
-        console.log('Поиск таймеров для config_id:', configKey);
-        console.log('Доступные ключи в хранилище:', Array.from(tempTimersStorage.keys()));
-        
+        // РџСЂРѕРІРµСЂСЏРµРј РІСЂРµРјРµРЅРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ С‚Р°Р№РјРµСЂРѕРІ
+        console.log('РџРѕРёСЃРє С‚Р°Р№РјРµСЂРѕРІ РґР»СЏ config_id:', configKey);
+        console.log('Р”РѕСЃС‚СѓРїРЅС‹Рµ РєР»СЋС‡Рё РІ С…СЂР°РЅРёР»РёС‰Рµ:', Array.from(tempTimersStorage.keys()));
+
         const tempData = tempTimersStorage.get(configKey);
-        
+
         if (tempData && tempData.timers && Object.keys(tempData.timers).length > 0) {
-            console.log('Найдены таймеры в хранилище для config_id:', configKey);
-            console.log('Таймеры:', JSON.stringify(tempData.timers, null, 2));
-            
+            console.log('РќР°Р№РґРµРЅС‹ С‚Р°Р№РјРµСЂС‹ РІ С…СЂР°РЅРёР»РёС‰Рµ РґР»СЏ config_id:', configKey);
+            console.log('РўР°Р№РјРµСЂС‹:', JSON.stringify(tempData.timers, null, 2));
+
             const insertPromises = Object.entries(tempData.timers).map(([image, time]) => {
                 const roundedTime = Math.round((typeof time === 'number' ? time : parseFloat(time)) * 100) / 100;
-                
-                console.log(`Сохранение таймера: result_id=${resultId}, image=${image}, time=${roundedTime}`);
-                
+
+                console.log(`РЎРѕС…СЂР°РЅРµРЅРёРµ С‚Р°Р№РјРµСЂР°: result_id=${resultId}, image=${image}, time=${roundedTime}`);
+
                 return db.query(`
                     INSERT INTO schema_comics.images_time_result (result_id, image, time)
                     VALUES ($1, $2, $3)
                 `, [resultId, image, roundedTime]);
             });
-            
+
             await Promise.all(insertPromises);
             tempTimersStorage.delete(configKey);
-            
-            console.log('✅ Таймеры успешно сохранены для result_id:', resultId);
+
+            console.log('вњ… РўР°Р№РјРµСЂС‹ СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅС‹ РґР»СЏ result_id:', resultId);
         } else {
-            console.log('❌ Таймеры не найдены в хранилище для config_id:', configKey);
+            console.log('вќЊ РўР°Р№РјРµСЂС‹ РЅРµ РЅР°Р№РґРµРЅС‹ РІ С…СЂР°РЅРёР»РёС‰Рµ РґР»СЏ config_id:', configKey);
         }
-        
-        res.json({ 
-            success: true, 
-            message: 'Результат сохранен', 
+
+        res.json({
+            success: true,
+            message: 'Р РµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРµРЅ',
             result_id: resultId,
             timers_saved: !!tempData
         });
-        
+
     } catch (error) {
-        console.error('Ошибка сохранения результата:', error);
+        console.error('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ СЂРµР·СѓР»СЊС‚Р°С‚Р°:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// ВАЖНО: специфичный маршрут ДО общего
-// Получение полного результата с таймерами и всеми изображениями
+// Р’РђР–РќРћ: СЃРїРµС†РёС„РёС‡РЅС‹Р№ РјР°СЂС€СЂСѓС‚ Р”Рћ РѕР±С‰РµРіРѕ
+// РџРѕР»СѓС‡РµРЅРёРµ РїРѕР»РЅРѕРіРѕ СЂРµР·СѓР»СЊС‚Р°С‚Р° СЃ С‚Р°Р№РјРµСЂР°РјРё Рё РІСЃРµРјРё РёР·РѕР±СЂР°Р¶РµРЅРёСЏРјРё
 app.get('/api/results/:id/full', async (req, res) => {
     try {
         const { id } = req.params;
 
-        console.log('=== ЗАПРОС ПОЛНОГО РЕЗУЛЬТАТА ===');
+        console.log('=== Р—РђРџР РћРЎ РџРћР›РќРћР“Рћ Р Р•Р—РЈР›Р¬РўРђРўРђ ===');
         console.log('result_id:', id);
 
         const resultQuery = `
@@ -405,7 +401,7 @@ app.get('/api/results/:id/full', async (req, res) => {
         if (resultData.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                error: 'Результат не найден'
+                error: 'Р РµР·СѓР»СЊС‚Р°С‚ РЅРµ РЅР°Р№РґРµРЅ'
             });
         }
 
@@ -414,11 +410,11 @@ app.get('/api/results/:id/full', async (req, res) => {
 
         let comics = [];
         let configTitle = '';
-        
+
         if (configId) {
             const configQuery = 'SELECT test FROM schema_comics.configs WHERE id = $1';
             const configData = await db.query(configQuery, [configId]);
-            
+
             if (configData.rows.length > 0) {
                 configTitle = configData.rows[0].test || '';
             }
@@ -439,7 +435,7 @@ app.get('/api/results/:id/full', async (req, res) => {
             WHERE result_id = $1
         `;
         const timersData = await db.query(timersQuery, [id]);
-        
+
         const timers = {};
         timersData.rows.forEach(row => {
             if (timers[row.image]) {
@@ -449,9 +445,9 @@ app.get('/api/results/:id/full', async (req, res) => {
             }
         });
 
-        console.log('✅ Полный результат сформирован');
-        console.log('Изображений:', comics.length);
-        console.log('Таймеров:', Object.keys(timers).length);
+        console.log('вњ… РџРѕР»РЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚ СЃС„РѕСЂРјРёСЂРѕРІР°РЅ');
+        console.log('РР·РѕР±СЂР°Р¶РµРЅРёР№:', comics.length);
+        console.log('РўР°Р№РјРµСЂРѕРІ:', Object.keys(timers).length);
 
         res.json({
             success: true,
@@ -472,15 +468,15 @@ app.get('/api/results/:id/full', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения полного результата:', error);
+        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РїРѕР»РЅРѕРіРѕ СЂРµР·СѓР»СЊС‚Р°С‚Р°:', error);
         res.status(500).json({
             success: false,
-            error: 'Ошибка получения данных'
+            error: 'РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С…'
         });
     }
 });
 
-// Получение результата по ID (общий маршрут - ПОСЛЕ специфичного)
+// РџРѕР»СѓС‡РµРЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р° РїРѕ ID (РѕР±С‰РёР№ РјР°СЂС€СЂСѓС‚ - РџРћРЎР›Р• СЃРїРµС†РёС„РёС‡РЅРѕРіРѕ)
 app.get('/api/results/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -488,7 +484,7 @@ app.get('/api/results/:id', async (req, res) => {
         if (!id) {
             return res.status(400).json({
                 success: false,
-                error: 'Не передан id'
+                error: 'РќРµ РїРµСЂРµРґР°РЅ id'
             });
         }
 
@@ -505,7 +501,7 @@ app.get('/api/results/:id', async (req, res) => {
         if (dbResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                error: 'Результат не найден'
+                error: 'Р РµР·СѓР»СЊС‚Р°С‚ РЅРµ РЅР°Р№РґРµРЅ'
             });
         }
 
@@ -515,10 +511,10 @@ app.get('/api/results/:id', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения результата:', error);
+        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ СЂРµР·СѓР»СЊС‚Р°С‚Р°:', error);
         res.status(500).json({
             success: false,
-            error: 'Внутренняя ошибка сервера'
+            error: 'Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°'
         });
     }
 });
@@ -526,22 +522,22 @@ app.get('/api/results/:id', async (req, res) => {
 app.get('/api/timers/:result_id', async (req, res) => {
     try {
         const { result_id } = req.params;
-        
+
         const result = await db.query(`
             SELECT image, time 
             FROM schema_comics.images_time_result 
             WHERE result_id = $1 
             ORDER BY time DESC
         `, [result_id]);
-        
+
         res.json({
             success: true,
             data: result.rows,
             total_time: result.rows.reduce((sum, row) => sum + parseFloat(row.time), 0)
         });
-        
+
     } catch (error) {
-        console.error('Ошибка получения таймеров:', error);
+        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С‚Р°Р№РјРµСЂРѕРІ:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -555,5 +551,5 @@ app.get('/api/debug/temp-storage', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Сервер запущен: http://localhost:${PORT}`);
+    console.log(`РЎРµСЂРІРµСЂ Р·Р°РїСѓС‰РµРЅ: http://localhost:${PORT}`);
 });
